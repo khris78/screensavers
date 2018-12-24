@@ -1,0 +1,129 @@
+.TH XScreenSaver 1 "" "X Version 11"
+.SH NAME
+treadmill - displaying moving images
+.SH SYNOPSIS
+.B treadmill
+[\-display \fIhost:display.screen\fP]
+[\-visual \fIvisual\fP]
+[\-window]
+[\-root]
+[\-cover_time \fIseconds\fP]
+[\-amplitude \fIpercentage\fP]
+[\-img_count \fInumber\fP]
+[\-stretch_min \fIpercentage\fP]
+[\-stretch_max \fIpercentage\fP]
+[\-directions \fInumber\fP]
+[\-change_dir \fIseconds\fP]
+[\-line_width \fIpixels\fP]
+[\-fps]
+[\-titles]
+[\-debug]
+.SH DESCRIPTION
+Loads a random sequence of images and moves them on the screen. The way the images
+move depends on the parameters. 
+
+This program requires a good video card capable of supporting large
+textures.
+
+To specify the directory that images are loaded from, run
+.BR xscreensaver-demo (1)
+and click on the "Advanced" tab.
+.SH OPTIONS
+.TP 8
+.B \-visual \fIvisual\fP
+Specify which visual to use.  Legal values are the name of a visual class,
+or the id number (decimal or hex) of a specific visual.
+.TP 8
+.B \-window
+Draw on a newly-created window.  This is the default.
+.TP 8
+.B \-root
+Draw on the root window.
+.TP 8
+.B \-cover_time \fIseconds\fP
+How long an image will take to go through the screen. This is a reference time : some images will be faster, some other ones will be slower. 
+Default 35 seconds.
+.TP 8
+.B \-amplitude \fIpercentage\fP
+The speed difference between the slowest and the fastest images.
+Default 75%.
+.TP 8
+.B \-img_count \fInumber\fP
+The count of images that can be displayed simultaneously on the screen.
+Default 12 images.
+.TP 8
+.B \-stretch_min \fIpercentage\fP
+The stretch of the smallest images. The stretch is given as a percentage of the screen size.
+Default 15% of screen size.
+.TP 8
+.B \-stretch_max \fIpercentage\fP
+The stretch of the biggest images. The stretch is given as a percentage of the screen size.
+Default 50% of screen size.
+.TP 8
+.B \-directions \fInumber\fP
+The directions the images can move to : 
+.IP "" 10 
+1 : Left to right. The \-change_dir option is ignored.
+.IP "" 10 
+2 : Right to left. The \-change_dir option is ignored.
+.IP "" 10 
+3 : Top to bottom. The \-change_dir option is ignored.
+.IP "" 10 
+4 : Bottom to top. The \-change_dir option is ignored.
+.IP "" 10 
+5 : All the images go to the same direction, either vertically or horizontally. This global direction may change according to the \-change_dir option.
+.IP "" 10 
+6 : Each image has its own direction, either vertically or horizontally. This image direction may change according to the \-change_dir option. This is the default.
+.IP "" 10 
+7 : Each image has its own direction which is not limited to horizontally or vertically. Every angle is allowed. This image direction may change according to the \-change_dir option.
+.IP "" 10 
+8 : Alternate the previous modes [5 to 7] according to the \-change_dir option.
+.TP 8
+.B \-change_dir \fIseconds\fP
+Change the images direction every this-many seconds.
+Default 60 seconds
+.TP 8
+.B \-line_width \fIpixels\fP
+The width (in pixels) of the line around the images. A negative value means a random value between 0 and the specified number of pixels for each image.
+Default 1 pixel.
+.TP 8
+.B \-titles
+Display the file name of the current images.
+.TP 8
+.B \-fps
+Display the current frame rate and CPU load.
+.TP 8
+.B \-debug
+Prints debugging info to stderr. if not specified by \-debug_level option, the default debug level is 1.
+.TP 8
+.B \-debug_level \fIlevel\fP
+The level may be between 1 (not verbose) and 3 (very verbose). 
+.SH ENVIRONMENT
+.PP
+.TP 8
+.B DISPLAY
+to get the default host and display number.
+.TP 8
+.B XENVIRONMENT
+to get the name of a resource file that overrides the global resources
+stored in the RESOURCE_MANAGER property.
+.SH SEE ALSO
+.BR X (1),
+.BR xscreensaver-demo (1),
+.BR xscreensaver-getimage (1),
+.BR xscreensaver (1),
+.SH COPYRIGHT
+Copyright \(co 2010 by Christian Gallioz, based on an earlier version
+of glslideshow that was
+Copyright \(co 2002 by Mike Oliphant and 
+Copyright \(co 2003-2005 by Jamie Zawinski.
+
+Permission to use, copy, modify, distribute, and sell this software and
+its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation.  No representations are made about the
+suitability of this software for any purpose.  It is provided "as is"
+without express or implied warranty.
+.SH AUTHOR
+Christian Gallioz.

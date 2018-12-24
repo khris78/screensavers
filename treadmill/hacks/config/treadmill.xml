@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<screensaver name="treadmill" _label="Treadmill">
+
+  <command arg="-root"/>
+
+  <hgroup>
+   <vgroup>
+
+   <number id="cover_time" type="slider" arg="-cover_time %"
+           _label="Speed of the animation"
+           _low-label="Slow" _high-label="Fast"
+           low="10" high="180" default="35"
+           convert="invert"/>
+
+   <number id="amplitude" type="slider" arg="-amplitude %"
+           _label="Speed difference between slowest and fastest images"
+           _low-label="Low" _high-label="High"
+           low="5" high="95" default="75"/>
+
+   <select id="directions">
+     <option id="6" _label="Horizontal and vertical simultaneously"/>
+     <option id="5" _label="A single horizontal or vertical direction" arg-set="-directions 5"/>
+     <option id="1" _label="Left to right only"                        arg-set="-directions 1"/>
+     <option id="2" _label="Right to left only"                        arg-set="-directions 2"/>
+     <option id="3" _label="Top to bottom only"                        arg-set="-directions 3"/>
+     <option id="4" _label="Bottom to top only"                        arg-set="-directions 4"/>
+     <option id="7"  _label="Any angle direction"                       arg-set="-directions 7"/>
+     <option id="8" _label="Alternate the previous modes"              arg-set="-directions 8"/>
+   </select>
+
+   <number id="change_dir" type="slider" arg="-change_dir %"
+           _label="Time before the mode or the direction changes (doesn't apply to 'X to Y only' modes)"
+           _low-label="No change" _high-label="10 minutes"
+           low="0" high="600" default="60"/>
+
+   </vgroup>
+
+   <vgroup>
+   <number id="w_min" type="slider" arg="-stretch_min %"
+           _label="Minimum stretch of an image (% of screen size)"
+           _low-label="5" _high-label="35"
+           low="5" high="35" default="15"/>
+
+   <number id="w_min" type="slider" arg="-stretch_max %"
+           _label="Maximum stretch of an image"
+           _low-label="35" _high-label="80"
+           low="35" high="80" default="50"/>
+
+   <number id="img_count" type="slider" arg="-img_count %"
+           _label="Count of images that can be displayed simultaneously"
+           _low-label="5" _high-label="25"
+           low="5" high="25" default="12"/>
+
+   <number id="line_width" type="slider" arg="-line_width %"
+           _label="Width of the line around the images"
+           _low-label="0" _high-label="4"
+           low="0" high="4" default="1"/>
+   </vgroup>
+  </hgroup>
+
+  <hgroup>
+   <vgroup>
+    <boolean id="titles" _label="Show file names" arg-set="-titles"/>
+    <boolean id="showfps" _label="Show frame rate" arg-set="-fps"/>
+   </vgroup>
+   <vgroup>
+    <xscreensaver-image />
+   </vgroup>
+  </hgroup>
+
+  <_description>
+Displays a set of moving images.
+
+Based on GLSlideshow code by Mike Oliphant and Jamie Zawinski.
+Written by Christian Gallioz; 2010. 
+  </_description>
+</screensaver>
