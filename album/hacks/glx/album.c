@@ -1,4 +1,4 @@
-/* album, 2010 C.Gallioz <chris@gallioz.fr>
+/* album, 2010 C.Gallioz
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
