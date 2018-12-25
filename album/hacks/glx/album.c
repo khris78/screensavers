@@ -16,14 +16,14 @@
 
 #define DEFAULTS  "*delay:           30000                \n" \
                   "*showFPS:         False                \n" \
-	          "*fpsSolid:        True                 \n" \
-	          "*useSHM:          True                 \n" \
-		  "*titleFont:       -*-helvetica-medium-r-normal-*-14-*\n" \
+                  "*fpsSolid:        True                 \n" \
+                  "*useSHM:          True                 \n" \
+                  "*titleFont:       -*-helvetica-medium-r-normal-*-14-*\n" \
                   "*desktopGrabber:  xscreensaver-getimage -no-desktop %s\n" \
-		  "*grabDesktopImages:   False \n" \
-		  "*chooseRandomImages:  True  \n"
+                  "*grabDesktopImages:   False \n" \
+                  "*chooseRandomImages:  True  \n"
 
-# define refresh_album 0
+# define free_album 0
 # define release_album 0
 # include "xlockmore.h"
 
@@ -37,7 +37,7 @@
 # define DEF_DEBUG          "False"
 
 #include "grab-ximage.h"
-#include "glxfonts.h"
+#include "texfont.h"
 
 #define BUF_IMAGE_SIZE 8
 #define BUF_IMAGE_LOADING_MAX 2
@@ -96,8 +96,7 @@ typedef struct {
   Bool checked_fps_p;		/* Whether we have checked for a low
                                    frame rate. */
 
-  XFontStruct *xfont;		/* for printing image file names */
-  GLuint font_dlist;
+  texture_font_data *font_data;	/* for printing image file names */
 
   int image_id;                 /* debugging id for image */
 
@@ -135,8 +134,8 @@ ENTRYPOINT ModeSpecOpt album_opts = {countof(opts), opts, countof(vars), vars, N
 static const char *
 blurb (void)
 {
-# ifdef HAVE_COCOA
-  return "GLalbum";
+# ifdef HAVE_JWXYZ
+  return "album";
 # else
   static char buf[255];
   time_t now = time ((time_t *) 0);
@@ -368,7 +367,7 @@ draw_image (ModeInfo *mi, image *img, rect pos)
   
   if (debug_p) {
     fprintf (stderr, "%s: dessin de l'image %d : min, max = %f, %f, %f, %f\n",
-                 blurb(), img->id, xmin, ymin, xmax, ymax);
+             blurb(), img->id, xmin, ymin, xmax, ymax);
   } 
 
   glBindTexture (GL_TEXTURE_2D, img->texid);
@@ -391,36 +390,54 @@ draw_image (ModeInfo *mi, image *img, rect pos)
   glEnd();
   glEnable (GL_TEXTURE_2D);
 
-      if (do_titles && img->title && *img->title)
-      {
-        int x,y;
-	int w, h = 0;
-	if (pos.txt[1] == 'L') {
-          x = (1 + xmin) / 2 * mi->xgwa.width + 3;
-        } else {
+
+  if (do_titles && img->title && *img->title)
+  {
+    int x,y;
+	  int w, h = 0;
+    double coef = 1.3;
+
+    
+/*
+	  if (pos.txt[1] == 'L') 
+    {
+      x = (1 + xmin) / 2 * mi->xgwa.width + 3;
+    } else {
           x = (1 + xmax) / 2 * mi->xgwa.width - 3;
           w = string_width(ss->xfont, img->title, &h);
           x -= w;
-        }
-	if (pos.txt[0] == 'T') {
+    }
+	  if (pos.txt[0] == 'T') 
+    {
           y = (1 + ymax) / 2 * mi->xgwa.height - 3;
-        } else {
+    } else {
           y = (1 + ymin) / 2 * mi->xgwa.height + 6;
           if (h == 0) {
             w = string_width(ss->xfont, img->title, &h);
           }
           y += h;
-        }
-        glColor4f (0.3, 0.3, 0.3, 1);
-        print_gl_string (mi->dpy, ss->xfont, ss->font_dlist,
-                         mi->xgwa.width, mi->xgwa.height, x, y,
-                         img->title, False);
-        x++; y++;
-        glColor4f (1, 1, 1, 1);
-        print_gl_string (mi->dpy, ss->xfont, ss->font_dlist,
-                         mi->xgwa.width, mi->xgwa.height, x, y,
-                         img->title, False);
-      }
+    }
+*/
+    glPushMatrix(); 
+    glLoadIdentity();
+    glOrtho(0, coef * MI_WIDTH(mi), 0, coef * MI_HEIGHT(mi), -1, 1);
+
+    glTranslatef ((xmin * MI_WIDTH(mi) + MI_WIDTH(mi)) * coef / 2, 
+                  (ymin * MI_HEIGHT(mi) + MI_HEIGHT(mi)) * coef / 2,
+                  0);
+    glEnable (GL_TEXTURE_2D);
+    glDisable (GL_DEPTH_TEST);
+
+    glColor3f (0.3, 0.3, 0.3);
+    print_texture_string (ss->font_data, img->title);
+
+    glTranslatef (2, 2, 0);
+    glColor3f (1, 1, 1);
+    print_texture_string (ss->font_data, img->title);
+
+    glEnable (GL_DEPTH_TEST);  
+    glPopMatrix(); 
+  }
 
   glPopMatrix();
 }
@@ -430,6 +447,8 @@ reshape_album (ModeInfo *mi, int width, int height)
 {
   int i;
   double ratio_image, ratio_ecran;
+
+  if (debug_p >= 1) fprintf(stderr, "%s : reshape_album %dx%d\n", blurb(), width, height);
 
   album_state *ss = &sss[MI_SCREEN(mi)];
   glViewport (0, 0, width, height);
@@ -538,7 +557,7 @@ init_album (ModeInfo *mi)
 
   glLineWidth (3);
 
-  load_font (mi->dpy, "titleFont", &ss->xfont, &ss->font_dlist);
+  ss->font_data = load_texture_font (mi->dpy, "titleFont");
 
   if (debug_p)
     hack_resources();
@@ -754,6 +773,7 @@ draw_album (ModeInfo *mi)
     ss->now = double_time();
 
     if (ss->await_for_images_p == True) {
+      /*
       glClearColor (0.0, 0.0, 0.0, 0.0);
       glClear (GL_COLOR_BUFFER_BIT);
 
@@ -761,6 +781,7 @@ draw_album (ModeInfo *mi)
       print_gl_string (mi->dpy, ss->xfont, ss->font_dlist,
                        mi->xgwa.width, mi->xgwa.height, 10, mi->xgwa.height - 10,
                        "Loading images...", False);
+      */
       glFinish();
       glXSwapBuffers (MI_DISPLAY (mi), MI_WINDOW(mi));
       ss->prev_frame_time = ss->now;
@@ -786,6 +807,6 @@ draw_album (ModeInfo *mi)
   } 
 }
 
-XSCREENSAVER_MODULE_2 ("GLalbum", glalbum, album)
+XSCREENSAVER_MODULE_2 ("album", album, album)
 
 #endif /* USE_GL */
