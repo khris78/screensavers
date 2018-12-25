@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<screensaver name="album" _label="GLalbum">
+
+  <command arg="-root"/>
+
+  <hgroup>
+   <vgroup>
+
+   <number id="duration" type="slider" arg="-duration %"
+           _label="Time until loading some new images"
+           _low-label="5 seconds" _high-label="5 minutes"
+           low="5" high="300" default="15"/>
+
+   </vgroup>
+  </hgroup>
+
+  <hgroup>
+   <vgroup>
+    <boolean id="titles" _label="Show file names" arg-set="-titles"/>
+   </vgroup>
+   <vgroup>
+    <xscreensaver-image />
+   </vgroup>
+  </hgroup>
+
+  <_description>
+Loads a random sequence of images and displays them as f they were in a photo album.
+
+Based on GLSlideshow code by Mike Oliphant and Jamie Zawinski.
+Written by Christian Gallioz; 2010. 
+  </_description>
+</screensaver>
