@@ -25,7 +25,7 @@
      <option id="2" _label="Right to left only"                        arg-set="-directions 2"/>
      <option id="3" _label="Top to bottom only"                        arg-set="-directions 3"/>
      <option id="4" _label="Bottom to top only"                        arg-set="-directions 4"/>
-     <option id="7"  _label="Any angle direction"                       arg-set="-directions 7"/>
+     <option id="7" _label="Any angle direction"                       arg-set="-directions 7"/>
      <option id="8" _label="Alternate the previous modes"              arg-set="-directions 8"/>
    </select>
 
@@ -54,8 +54,8 @@
 
    <number id="line_width" type="slider" arg="-line_width %"
            _label="Width of the line around the images"
-           _low-label="0" _high-label="4"
-           low="0" high="4" default="1"/>
+           _low-label="0" _high-label="12"
+           low="0" high="12" default="1"/>
    </vgroup>
   </hgroup>
 

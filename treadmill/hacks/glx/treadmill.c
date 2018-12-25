@@ -689,37 +689,24 @@ draw_image (ModeInfo *mi, image *img)
   
   if (do_titles_p && img->title && *img->title) 
   {
-/*    int x,y,w,h; 
-  
-    if (img->pos_txt[1] == 'L') 
-    {
-      x = (1 + xmin) / 2 * mi->xgwa.width;
-      h = 0;
-    } 
-    else 
-    {
-      x = (1 + xmax) / 2 * mi->xgwa.width;
-      w = string_width(ss->xfont, img->title, &h);
-      x -= w;
-    }
-    if (img->pos_txt[0] == 'T') 
-    {
-      y = (1 + ymax) / 2 * mi->xgwa.height + 4 + img->line_width / 2;
-      if (h == 0) 
-      {
-        w = string_width(ss->xfont, img->title, &h);
-      }
-      y += h;
-    }
-    else 
-    {
-      y = (1 + ymin) / 2 * mi->xgwa.height - 2 - img->line_width / 2;
-    }
-*/
-    glColor4f (1, 1, 1, 1);
-    print_texture_label (mi->dpy, ss->font_data, 
-                     mi->xgwa.width, mi->xgwa.height, 
-                     1, img->title);
+    double coef = 1.3;
+
+/*    glPushMatrix(); */
+    glLoadIdentity();
+    
+    glOrtho(0, coef * MI_WIDTH(mi), 0, coef * MI_HEIGHT(mi), -1, 1);
+    glTranslatef (((xmin + 2 * ss->horizontal_line_width) * MI_WIDTH(mi) + MI_WIDTH(mi)) * coef / 2, 
+                  ((ymin + 2 * ss->vertical_line_width) * MI_HEIGHT(mi) + MI_HEIGHT(mi)) * coef / 2,
+                  0);
+    glEnable (GL_TEXTURE_2D);
+    glDisable (GL_DEPTH_TEST);
+
+    glColor3f (1, 1, 1);
+    
+    print_texture_string (ss->font_data, img->title);
+    glDisable (GL_TEXTURE_2D);
+    glEnable (GL_DEPTH_TEST);
+/*    glPopMatrix(); */
   }
 
   glPopMatrix();
