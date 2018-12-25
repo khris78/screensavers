@@ -23,7 +23,7 @@
                   "*grabDesktopImages:   False \n" \
                   "*chooseRandomImages:  True  \n"
 
-# define refresh_treadmill 0
+# define free_treadmill 0
 # define release_treadmill 0
 # include "xlockmore.h"
 
@@ -53,10 +53,10 @@
 #define DEF_TITLES         "False"
 #define DEF_DEBUG          "False"
 #define DEF_DEBUG_LEVEL    "0"
-#define DEF_LINE_WIDTH     "1"
+#define DEF_LINE_WIDTH     "3"
 
 #include "grab-ximage.h"
-#include "glxfonts.h"
+#include "texfont.h"
 
 #define BUF_IMAGE_LOADING_MAX 2
 #define MAX_LAYERS 3
@@ -79,7 +79,7 @@ typedef struct {
   ModeInfo *mi;
   int id;              /* unique number for debugging */
   char *title;         /* the filename of this image */
-  int w, h;            /* size in pixels of the image */
+  int w, h;            /* size in pixels of (half of) the image */
   XRectangle geom;     /* where in the image the bits are */
   Bool loaded;         /* whether the image has finished loading */
   Bool used;           /* whether the image is appearing on screen */
@@ -113,8 +113,7 @@ typedef struct {
   double now;              /* current time in seconds */
   double img_last_change_time;    /* Last change of the displayed images */
   
-  XFontStruct *xfont;             /* for printing image file names */
-  GLuint font_dlist;
+  texture_font_data *font_data;	/* for printing image file names */
 
   int image_id;                   /* debugging id for image */
 
@@ -122,6 +121,9 @@ typedef struct {
 
   double next_direction_change_time; /* time to next change the direction */
   double next_insertion_time;     /* time to next insert an image to the screen */
+
+  double horizontal_line_width;  /* line_width for a value of 1 in GL coordiantes */ 
+  double vertical_line_width; /* line_width for a value of 1 in GL coordiantes */
 
 } treadmill_state;
 
@@ -175,7 +177,7 @@ ENTRYPOINT ModeSpecOpt treadmill_opts = {countof(opts), opts, countof(vars), var
 static const char *
 blurb (void)
 {
-# ifdef HAVE_COCOA
+# ifdef HAVE_JWXYZ
   return "treadmill";
 # else
   static char buf[255];
@@ -196,27 +198,23 @@ blurb (void)
 static double get_dir_radians(ModeInfo *mi) 
 {
   double ret;
+  int dir;
 
   if (debug_p >= 3) fprintf(stderr, "%s : get_dir_radians\n", blurb());
 
-  if (directions_p == ANY_DIR) 
+  treadmill_state *ss = &sss[MI_SCREEN(mi)];
+  dir = ss->directions;
+
+  if (dir == ANY_DIR) 
   {
     ret = M_PI * (random() - RAND_MAX_2) / (double) RAND_MAX_2;
-
   } 
   else  
   {
-    int dir;
-
-    if (directions_p == MULTI_CARDINAL_DIR) 
+    if (dir == MULTI_CARDINAL_DIR) 
     {
       dir = random() % 4 + 1;
     } 
-    else 
-    {
-      treadmill_state *ss = &sss[MI_SCREEN(mi)];
-      dir = ss->directions;
-    }
 
     switch(dir) 
     {
@@ -406,7 +404,7 @@ static Bool insert_image(ModeInfo *mi)
   } 
   else 
   {
-    img->line_width = random() % (1 - line_width_p);
+    img->line_width = 1 + random() % (-line_width_p);
   } 
 
   if (debug_p >= 2) 
@@ -657,7 +655,27 @@ draw_image (ModeInfo *mi, image *img)
   ymin = img->pos.y - img->pos.h;
   xmax = img->pos.x + img->pos.w;
   ymax = img->pos.y + img->pos.h;
-  
+
+  treadmill_state *ss = &sss[MI_SCREEN(mi)];
+
+  if (img->line_width) 
+  {
+    GLfloat H_delta = img->line_width * ss->horizontal_line_width;
+    GLfloat V_delta = img->line_width * ss->vertical_line_width;
+
+    glLineWidth(img->line_width);
+
+    glDisable (GL_TEXTURE_2D);
+    glBegin (GL_QUADS);
+    glVertex3f ( xmin - V_delta, ymin - H_delta, 0);
+    glVertex3f ( xmax + V_delta, ymin - H_delta , 0);
+    glVertex3f ( xmax + V_delta, ymax + H_delta , 0);
+    glVertex3f ( xmin - V_delta, ymax + H_delta, 0);
+    glEnd();
+    glEnable (GL_TEXTURE_2D);
+  }
+
+
   glBindTexture (GL_TEXTURE_2D, img->texid);
   glColor4f (1, 1, 1, 1);
   glNormal3f (0, 0, 1);
@@ -669,25 +687,10 @@ draw_image (ModeInfo *mi, image *img)
   glTexCoord2f (img->tex_point_1.x, img->tex_point_1.y); glVertex3f ( xmin , ymax , 0);
   glEnd();
   
-  if (img->line_width) 
-  {
-    glLineWidth(img->line_width);
-
-    glDisable (GL_TEXTURE_2D);
-    glBegin (GL_LINE_LOOP);
-    glVertex3f ( xmin , ymin , 0);
-    glVertex3f ( xmax , ymin , 0);
-    glVertex3f ( xmax , ymax , 0);
-    glVertex3f ( xmin , ymax , 0);
-    glEnd();
-    glEnable (GL_TEXTURE_2D);
-  }
-
   if (do_titles_p && img->title && *img->title) 
   {
-    int x,y,w,h;
-    treadmill_state *ss = &sss[MI_SCREEN(mi)];
-
+/*    int x,y,w,h; 
+  
     if (img->pos_txt[1] == 'L') 
     {
       x = (1 + xmin) / 2 * mi->xgwa.width;
@@ -712,11 +715,11 @@ draw_image (ModeInfo *mi, image *img)
     {
       y = (1 + ymin) / 2 * mi->xgwa.height - 2 - img->line_width / 2;
     }
-
+*/
     glColor4f (1, 1, 1, 1);
-    print_gl_string (mi->dpy, ss->xfont, ss->font_dlist,
-                     mi->xgwa.width, mi->xgwa.height, x, y,
-                     img->title, False);
+    print_texture_label (mi->dpy, ss->font_data, 
+                     mi->xgwa.width, mi->xgwa.height, 
+                     1, img->title);
   }
 
   glPopMatrix();
@@ -770,7 +773,7 @@ reshape_treadmill (ModeInfo *mi, int width, int height)
 
   treadmill_state *ss = &sss[MI_SCREEN(mi)];
 
-  if (debug_p >= 3) fprintf(stderr, "%s : reshape_treadmill\n", blurb());
+  if (debug_p >= 1) fprintf(stderr, "%s : reshape_treadmill %dx%d\n", blurb(), width, height);
  
   glViewport (0, 0, width, height);
   glMatrixMode (GL_PROJECTION);
@@ -780,8 +783,13 @@ reshape_treadmill (ModeInfo *mi, int width, int height)
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  if (width > 0) {
+    ss->vertical_line_width = 2.0 / width;
+  }
   if (height > 0) 
   {
+    ss->horizontal_line_width = 2.0 / height;
+
     ratio_screen = (double) width / height;
 
     for (i = 0; i < MAX_LAYERS ; i++) 
@@ -901,7 +909,7 @@ init_treadmill (ModeInfo *mi)
   {
     change_dir_p = 0;
   }
-  if (directions_p == 8) 
+  if (directions_p == ANY_MODE) 
   {
     change_mode_p = True;
     directions_p = random() % 6 + 1;
@@ -976,24 +984,21 @@ init_treadmill (ModeInfo *mi)
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  load_font (mi->dpy, "titleFont", &ss->xfont, &ss->font_dlist);
+  ss->font_data = load_texture_font (mi->dpy, "titleFont");
 
   if (debug_p)
     hack_resources();
 
-  if (directions_p <= 4) 
+  if (directions_p == UNIQUE_CARDINAL_DIR) 
   {
-    ss->directions = directions_p;
-  } 
-  else if (directions_p == 5) 
-  {
+    /* Choose a direction */
     ss->directions = random() % 4 + 1;
   } 
   else 
   {
-    ss->directions = 0;
-  }
-
+    ss->directions = directions_p;
+  } 
+ 
   ss->next_direction_change_time = ss->now + change_dir_p;
   ss->next_insertion_time = 0;
   ss->img_last_change_time = ss->now;
